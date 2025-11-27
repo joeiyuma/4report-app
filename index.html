@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レポートセレクター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        #selection-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #6B8DD6 100%);
+        }
+        .title {
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 50px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+        }
+        .button-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .select-btn {
+            width: 220px;
+            height: 180px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .select-btn:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .btn-shoudan { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); }
+        .btn-keiyaku { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .btn-icon { font-size: 3rem; }
+
+        #shoudan-app, #keiyaku-app { display: none; }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .back-btn:hover { transform: scale(1.05); }
+
+        .gradient-text {
+            background: linear-gradient(to right, #4f46e5, #9333ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- ========== 選択画面 ========== -->
+    <div id="selection-screen">
+        <h1 class="title">📊 レポートを選択してください</h1>
+        <div class="button-container">
+            <button class="select-btn btn-shoudan" onclick="showApp('shoudan')">
+                <span class="btn-icon">💼</span>
+                <span>商談用レポート</span>
+            </button>
+            <button class="select-btn btn-keiyaku" onclick="showApp('keiyaku')">
+                <span class="btn-icon">📝</span>
+                <span>契約用レポート</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== 商談用レポート ========== -->
+    <div id="shoudan-app">
+        <button class="back-btn" onclick="backToSelection()">← 戻る</button>
+        <div class="min-h-screen transition-colors duration-200 bg-gray-100 text-gray-900 pt-16">
+            <div class="container mx-auto px-4 py-8 max-w-6xl">
+                <header class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h1 class="text-2xl font-bold">保険営業向けテンプレートセレクター</h1>
+                        <button id="shoudan-theme-btn" onclick="shoudanToggleTheme()" class="p-2 rounded-full bg-blue-100 text-blue-800">🌙</button>
+                    </div>
+                </header>
+                <main>
+                    <div id="shoudan-card1" class="bg-white p-6 rounded-lg shadow-md mb-6">
+                        <div id="shoudan-categories" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-1"></div>
+                        <div class="flex justify-center items-center gap-4 mt-6">
+                            <button onclick="shoudanCopyAll()" id="shoudan-copy-btn" class="py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-gray-200 text-gray-400 cursor-not-allowed">📋 すべてコピー</button>
+                            <button onclick="shoudanClearAll()" id="shoudan-clear-btn" class="py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-gray-200 text-gray-400 cursor-not-allowed">🗑️ すべて削除</button>
+                        </div>
+                    </div>
+                    <div id="shoudan-card2" class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                            <h2 id="shoudan-count" class="text-xl font-bold mb-1 sm:mb-0">選択中テンプレート: 0件</h2>
+                            <div class="flex flex-wrap justify-center gap-4 mt-2 sm:mt-0">
+                                <button onclick="shoudanClearAll()" id="shoudan-clear-btn2" class="py-3 px-6 rounded-md text-base font-medium transition-colors flex items-center justify-center bg-gray-200 text-gray-400 cursor-not-allowed">🗑️ すべて削除</button>
+                                <button onclick="shoudanCopyAll()" id="shoudan-copy-btn2" class="py-4 px-10 rounded-md text-lg font-bold transition-colors flex items-center justify-center bg-gray-200 text-gray-400 cursor-not-allowed">📋 すべてコピー</button>
+                            </div>
+                        </div>
+                        <div id="shoudan-selected" class="p-3 rounded-md bg-gray-50">
+                            <div class="p-8 rounded-md text-center text-gray-500">カテゴリータブをクリックして、テンプレートを選択してください</div>
+                        </div>
+                        <div id="shoudan-success" class="hidden mt-4 py-3 px-4 rounded-md text-center bg-green-100 text-green-800">テキストがクリップボードにコピーされました</div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 契約用レポート ========== -->
+    <div id="keiyaku-app">
+        <button class="back-btn" onclick="backToSelection()">← 戻る</button>
+        <div class="bg-gray-50 min-h-screen pt-16">
+            <header class="py-6 px-4">
+                <div class="max-w-7xl mx-auto flex justify-between items-center">
+                    <h1 class="text-3xl font-bold gradient-text">テンプレートコピーBOX</h1>
+                    <div class="flex items-center">
+                        <span id="keiyaku-selectedCount" class="text-sm font-medium text-indigo-600 mr-4" style="display:none;"></span>
+                    </div>
+                </div>
+            </header>
+            <main class="max-w-7xl mx-auto py-8 px-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 bg-white rounded-lg shadow-md p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xl font-semibold text-gray-800">テンプレートを選択</h2>
+                                <button onclick="keiyakuClearAll()" class="px-2 py-1 text-xs rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700">全てクリア</button>
+                            </div>
+                            <button id="keiyaku-copyAllBtn" onclick="keiyakuCopyAll()" style="display:none;" class="px-4 py-2 rounded-md text-sm text-white font-medium bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">選択した全てをコピー</button>
+                        </div>
+                        <div id="keiyaku-templateList" class="space-y-6"></div>
+                        <div id="keiyaku-bottomCopyBtn" style="display:none;" class="mt-6 py-3">
+                            <button onclick="keiyakuCopyAll()" class="w-full py-3 rounded-md text-white font-medium text-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md">選択した全てをコピー</button>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                        <div id="keiyaku-previewArea">
+                            <div class="h-64 flex items-center justify-center text-center">
+                                <p class="text-lg text-gray-500">左側からテンプレートを選択してください</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer class="py-6 mt-12 bg-gray-100 text-gray-500">
+                <div class="max-w-7xl mx-auto px-4 text-center text-sm">
+                    <p>© 2025 テンプレートコピーBOX - すべてのテンプレートは自由にご利用いただけます</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // ========== 共通関数 ==========
+        // アスタリスクを除去する関数
+        function removeAsterisks(text) {
+            return text.replace(/\*\*/g, '').replace(/\*/g, '');
+        }
+
+        function copyToClipboard(text) {
+            // コピー前にアスタリスクを除去
+            const cleanText = removeAsterisks(text);
+            const textarea = document.createElement('textarea');
+            textarea.value = cleanText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+
+        // ========== 画面切り替え ==========
+        function showApp(type) {
+            document.getElementById('selection-screen').style.display = 'none';
+            if (type === 'shoudan') {
+                document.getElementById('shoudan-app').style.display = 'block';
+                initShoudanApp();
+            } else if (type === 'keiyaku') {
+                document.getElementById('keiyaku-app').style.display = 'block';
+                initKeiyakuApp();
+            }
+        }
+        function backToSelection() {
+            document.getElementById('selection-screen').style.display = 'flex';
+            document.getElementById('shoudan-app').style.display = 'none';
+            document.getElementById('keiyaku-app').style.display = 'none';
+        }
+
+        // ==================== 商談用レポート ====================
+        const shoudanTemplateData = {
+            "メール敬語プロンプト": { text: "上記の文章を、丁寧でやわらかい印象のビジネスメールに変換してください。\n相手に敬意を示しつつ、堅すぎず自然な文体にしてください。\n「存じます」「恐縮ではございますが」などの硬い表現は避けてください。\n文章はビジネスシーンで自然に使える長さでまとめてください。\n件名宛名はいりません。本文のみ表示してください" },
+            "初回　同席者あり": { text: "・同席者：配偶者\n・面談内容（意向の詳細等）：ヒアリング中\n・個別プラン提案（保険会社名と商品名）：未提案\n・意向の追加・変更：ヒアリング中" },
+            "初回　同席者なし": { text: "・同席者：なし\n・面談内容（意向の詳細等）：ヒアリング中\n・個別プラン提案（保険会社名と商品名）：未提案\n・意向の追加・変更：ヒアリング中" },
+            "OI 初回訪問": { text: "本日は初回面談にてご挨拶をさせていただきました。\n\nはじめに、弊社のご紹介をさせていただき、どのような会社であるかについて詳しくご説明いたしました。\n\nその中で、ファイナンシャルプランナー（FP）相談ではどのようなことが可能かを、パンフレット等を用いてご案内いたしました。\n\nFP相談の価値については、大変ご興味をお持ちいただいたご様子でした。\n\nこれからお客様が関心をお持ちの内容を伺いながら、丁寧にお伝えしてまいります。" },
+            "貯蓄の基本": { text: "貯蓄の話を聞きたいということで、貯蓄の短期・中期・長期の期間の分け方をお伝えしました。\n\n長期分野には保険や資産運用などでも資産形成できることをお伝えしました。\n\n保険や資産運用は短期的な貯蓄に向かないこと、場合によっては元本割れが発生してしまうこともしっかりお伝えしました。\n\nそれぞれの選択肢にはメリット・デメリットがあることを、しっかりとご説明いたしました。\n\nそのうえで、お客様のご意向や目的を丁寧にヒアリングさせていただき、その目的に合った手段をご提案していく旨をお伝えいたしました。" },
+            "支出の減らし方": { text: "固定費の見直しについてもお伝えいたしました。\n固定費がうまく見直せた場合、支出を抑えることができ、その分を資産形成などに充てることが可能になるため、結果的に資産形成に回せる金額が増える、ということをご説明いたしました。\n\n具体的には2点、お伝えしております。\n\nまず1点目は「通信費」についてです。携帯電話のキャリアによって月々の費用に違いがあることをお伝えし、見直しによって固定費を抑える可能性についてご案内いたしました。\n\n次に2点目は「保険にかかる費用」についてです。公的な保険制度や職場の福利厚生の内容によって、お一人おひとりにとって必要な保障額が異なることをご説明いたしました。\nそのうえで、ご自身に備わっている福利厚生を踏まえ、不足する部分を補うものが保険である、という考え方についてもお伝えいたしました。" },
+            "資産運用の基本": { text: "長期投資や資産分散、時間分散について、お客様にできるだけわかりやすくご説明いたしました。\n\n長期的に投資を行っていくことの重要性や、しっかりと資産を分散することで、分散しない場合と比較してリスクを軽減できる可能性があることについてもお伝えいたしました。\n\nまた、投資信託の基本的な仕組みについてご説明し、時間分散の観点では「ドルコスト平均法」についてもご紹介させていただきました。お客様はとてもわかりやすいです、といっていましたのでご理解をしていただいたようです。" },
+            "資産運用": { text: "今回は、NISA・積み立てNISA・iDeCo・変額保険の一般的な仕組みの話、各メリットデメリット違いを伝えました。\n内容をご理解されていました。保障の付く変額保険も気に入っていました。\n\n【変額保険】\n\n変額保険の払込免除・保障の広さをすごく気にいっていました。\n\n変額保険の\n運用のデメリット。\n最低保証がないこと、運用リスク、解約控除・保険関係費用、運用関係費用　等\nドルコスト平均法などをしっかいりお伝えしました。\nご理解いただき変額保険もとても気に入っていました。" },
+            "４つのリスク": { text: "生命保険の話題になり、公的保険制度や職場の福利厚生ではカバーしきれない保障を、私的保険で補うことの目的についてご説明いたしました。\n\nそのうえで、生命保険に関わる「4つのリスク」について、知識としてお伝えいたしました。\n一般的な会社員の方に「もしも」が起こった場合を想定し、具体的なたとえ話を交えてご説明しております。\n\n例えば、万が一お亡くなりになった場合には「遺族年金」が支給されますが、それだけでは不足する可能性があるため、その不足分を「死亡保険」や「収入保障保険」でカバーするという考え方をご紹介しました。\n\nまた、お仕事ができなくなった場合には「傷病手当金」がありますが、それでも不足する場合は「就業不能保険」などで補うことができます。\n\n入院や手術に関しては「高額療養費制度」がありますが、それでもカバーしきれない費用や所得減少を補うために「医療保険」「がん保険」「特定疾病保険」などの活用をご案内いたしました。\n\nさらに、長期的な視点での保障として、「終身保険」や「貯蓄性のある終身保険」、「一時払い保険」などの種類についてもジャンルとしてご紹介しております。\n\n最後に、「現在ご自身で、どの部分の備えが必要だと感じていらっしゃいますか？」とお伺いし、今後のFP相談を通じて、より具体的にお客様にとって必要な保障や備えについて一緒に考えてまいります、というお話をさせていただきました。" },
+            "乗り合い代理店保の話": { text: "当社FPパートナーが「保険代理店」であることについても、改めて詳しくご説明いたしました。\nお客様のご意向に沿った保険を、複数の保険会社の中から比較・検討し、その中からご自身でお選びいただける仕組みとなっていることをお伝えいたしました。\n\nまた、1社の保険会社に限定されるのではなく、保険のジャンルごとに適した保険会社の商品を組み合わせてお持ちいただけることもご案内しております。\n\nさらに、お客様のご意向に合致し、保険内容にもご納得いただけたうえでご契約となった場合には、引き続き私どもが保険のご担当としてサポートさせていただけることも、しっかりとお伝えいたしました。" },
+            "ライフプラン": { text: "ライフプランについてもご説明させていただきました。\n\nライフプランとは、将来の収入から支出を差し引いて、どのくらいお金が残るのか、貯められるのかを把握するものであり、今後の収入状況や支出の変化、ご家族構成の変化などを踏まえた将来のシミュレーションが可能であることをお伝えいたしました。\n\nその中で、「マネーカルテ」を活用することで、老後資金・教育資金・住宅資金といった貯蓄の流れや資産形成のイメージを可視化できること、またそのライフスタイルを維持していくうえで、万が一の際に必要となる保障額の目安などもシミュレーションできる点についてご案内いたしました。\n\nお客様は大変ご興味を持っていました。" }
+        };
+
+        let shoudanSelected = {};
+        let shoudanIsDark = false;
+
+        function initShoudanApp() {
+            const container = document.getElementById('shoudan-categories');
+            container.innerHTML = '';
+            Object.keys(shoudanTemplateData).forEach(category => {
+                const btn = document.createElement('button');
+                btn.id = 'shoudan-cat-' + category;
+                btn.className = shoudanIsDark 
+                    ? 'px-4 py-3 rounded-md font-medium transition-colors whitespace-nowrap text-base bg-gray-700 text-white hover:bg-gray-600'
+                    : 'px-4 py-3 rounded-md font-medium transition-colors whitespace-nowrap text-base bg-gray-200 text-gray-700 hover:bg-gray-300';
+                btn.textContent = category;
+                btn.onclick = () => shoudanToggleCategory(category);
+                container.appendChild(btn);
+            });
+            shoudanUpdateUI();
+        }
+
+        function shoudanToggleTheme() {
+            shoudanIsDark = !shoudanIsDark;
+            const app = document.querySelector('#shoudan-app > div');
+            const card1 = document.getElementById('shoudan-card1');
+            const card2 = document.getElementById('shoudan-card2');
+            const selected = document.getElementById('shoudan-selected');
+            const themeBtn = document.getElementById('shoudan-theme-btn');
+            
+            if (shoudanIsDark) {
+                app.className = 'min-h-screen transition-colors duration-200 bg-gray-900 text-white pt-16';
+                card1.className = 'bg-gray-800 p-6 rounded-lg shadow-md mb-6';
+                card2.className = 'bg-gray-800 p-6 rounded-lg shadow-md';
+                selected.className = 'p-3 rounded-md bg-gray-700';
+                themeBtn.className = 'p-2 rounded-full bg-gray-700 text-yellow-300';
+                themeBtn.textContent = '☀️';
+            } else {
+                app.className = 'min-h-screen transition-colors duration-200 bg-gray-100 text-gray-900 pt-16';
+                card1.className = 'bg-white p-6 rounded-lg shadow-md mb-6';
+                card2.className = 'bg-white p-6 rounded-lg shadow-md';
+                selected.className = 'p-3 rounded-md bg-gray-50';
+                themeBtn.className = 'p-2 rounded-full bg-blue-100 text-blue-800';
+                themeBtn.textContent = '🌙';
+            }
+            initShoudanApp();
+        }
+
+        function shoudanToggleCategory(category) {
+            const btn = document.getElementById('shoudan-cat-' + category);
+            if (shoudanSelected[category]) {
+                delete shoudanSelected[category];
+                btn.className = shoudanIsDark 
+                    ? 'px-4 py-3 rounded-md font-medium transition-colors whitespace-nowrap text-base bg-gray-700 text-white hover:bg-gray-600'
+                    : 'px-4 py-3 rounded-md font-medium transition-colors whitespace-nowrap text-base bg-gray-200 text-gray-700 hover:bg-gray-300';
+            } else {
+                shoudanSelected[category] = shoudanTemplateData[category].text;
+                btn.className = shoudanIsDark 
+                    ? 'px-4 py-3 rounded-md font-medium transition-colors whitespace-nowrap text-base bg-green-700 text-white'
+                    : 'px-4 py-3 rounded-md font-medium transition-colors whitespace-nowrap text-base bg-green-500 text-white';
+            }
+            shoudanUpdateUI();
+            if (Object.keys(shoudanSelected).length > 0) {
+                shoudanCopyAll();
+            }
+        }
+
+        function shoudanUpdateUI() {
+            const count = Object.keys(shoudanSelected).length;
+            document.getElementById('shoudan-count').textContent = `選択中テンプレート: ${count}件`;
+            
+            const copyBtn = document.getElementById('shoudan-copy-btn');
+            const clearBtn = document.getElementById('shoudan-clear-btn');
+            const copyBtn2 = document.getElementById('shoudan-copy-btn2');
+            const clearBtn2 = document.getElementById('shoudan-clear-btn2');
+            
+            if (count > 0) {
+                copyBtn.className = shoudanIsDark 
+                    ? 'py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-green-700 text-white hover:bg-green-600'
+                    : 'py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-green-500 text-white hover:bg-green-600';
+                clearBtn.className = shoudanIsDark 
+                    ? 'py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-red-700 text-white hover:bg-red-600'
+                    : 'py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-red-500 text-white hover:bg-red-600';
+                copyBtn2.className = shoudanIsDark 
+                    ? 'py-4 px-10 rounded-md text-lg font-bold transition-colors flex items-center justify-center bg-green-800 text-white hover:bg-green-700'
+                    : 'py-4 px-10 rounded-md text-lg font-bold transition-colors flex items-center justify-center bg-green-600 text-white hover:bg-green-700';
+                clearBtn2.className = shoudanIsDark 
+                    ? 'py-3 px-6 rounded-md text-base font-medium transition-colors flex items-center justify-center bg-red-800 text-white hover:bg-red-700'
+                    : 'py-3 px-6 rounded-md text-base font-medium transition-colors flex items-center justify-center bg-red-500 text-white hover:bg-red-600';
+            } else {
+                copyBtn.className = shoudanIsDark 
+                    ? 'py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-gray-200 text-gray-400 cursor-not-allowed';
+                clearBtn.className = shoudanIsDark 
+                    ? 'py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'py-4 px-12 rounded-md text-lg font-bold transition-colors flex-1 flex items-center justify-center bg-gray-200 text-gray-400 cursor-not-allowed';
+                copyBtn2.className = shoudanIsDark 
+                    ? 'py-4 px-10 rounded-md text-lg font-bold transition-colors flex items-center justify-center bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'py-4 px-10 rounded-md text-lg font-bold transition-colors flex items-center justify-center bg-gray-200 text-gray-400 cursor-not-allowed';
+                clearBtn2.className = shoudanIsDark 
+                    ? 'py-3 px-6 rounded-md text-base font-medium transition-colors flex items-center justify-center bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'py-3 px-6 rounded-md text-base font-medium transition-colors flex items-center justify-center bg-gray-200 text-gray-400 cursor-not-allowed';
+            }
+            
+            const selectedDiv = document.getElementById('shoudan-selected');
+            if (count > 0) {
+                let html = '<div class="space-y-4">';
+                Object.entries(shoudanSelected).forEach(([cat, text]) => {
+                    html += `
+                        <div class="p-4 rounded-md ${shoudanIsDark ? 'bg-gray-800 border border-gray-600' : 'bg-white border border-gray-200'}">
+                            <div class="flex justify-between items-start">
+                                <div class="font-medium mb-2">${cat}</div>
+                                <button onclick="shoudanRemove('${cat}')" class="p-1 rounded-full ${shoudanIsDark ? 'text-gray-400 hover:bg-gray-700 hover:text-red-300' : 'text-gray-500 hover:bg-gray-200 hover:text-red-500'}" title="削除">🗑️</button>
+                            </div>
+                            <div class="whitespace-pre-line text-sm">${removeAsterisks(text)}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                selectedDiv.innerHTML = html;
+            } else {
+                selectedDiv.innerHTML = `<div class="p-8 rounded-md text-center ${shoudanIsDark ? 'text-gray-400' : 'text-gray-500'}">カテゴリータブをクリックして、テンプレートを選択してください</div>`;
+            }
+        }
+
+        function shoudanRemove(category) {
+            delete shoudanSelected[category];
+            const btn = document.getElementById('shoudan-cat-' + category);
+            if (btn) {
+                btn.className = shoudanIsDark 
+                    ? 'px-4 py-3 rounded-md font-medium transition-colors whitespace-nowrap text-base bg-gray-700 text-white hover:bg-gray-600'
+                    : 'px-4 py-3 rounded-md font-medium transition-colors whitespace-nowrap text-base bg-gray-200 text-gray-700 hover:bg-gray-300';
+            }
+            shoudanUpdateUI();
+        }
+
+        function shoudanCopyAll() {
+            if (Object.keys(shoudanSelected).length === 0) return;
+            const text = Object.values(shoudanSelected).join('\n\n');
+            copyToClipboard(text);
+            const el = document.getElementById('shoudan-success');
+            el.className = shoudanIsDark 
+                ? 'mt-4 py-3 px-4 rounded-md text-center bg-green-900/50 text-green-200'
+                : 'mt-4 py-3 px-4 rounded-md text-center bg-green-100 text-green-800';
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 2000);
+        }
+
+        function shoudanClearAll() {
+            shoudanSelected = {};
+            initShoudanApp();
+        }
+
+        // ==================== 契約用レポート ====================
+        // アスタリスクを削除したテンプレートデータ
+        const keiyakuTemplates = {
+            契約レポート: [
+                { id: '1', label: 'N 同席 配偶者', content: '・同席者：　配偶者\n・複数提案から当該商品を選択された理由：\nレポート内容に詳細記入済\n・契約締結前交付書面（特定保険契約の場合）の理解度：理解していた\n・乗換契約であった場合その理由:\nお客さまの意向にがあっているため。\n内容に詳細記入済\n・当初意向と最終意向が不一致の場合、その理由：\nレポートに詳細記入済' },
+                { id: '2', label: 'N 同席 なし', content: '・同席者：　なし\n・複数提案から当該商品を選択された理由：\nレポート内容に詳細記入済\n・契約締結前交付書面（特定保険契約の場合）の理解度：理解していた\n・乗換契約であった場合その理由:\nお客さまの意向にがあっているため。\n内容に詳細記入済\n・当初意向と最終意向が不一致の場合、その理由：\nレポートに詳細記入済' },
+                { id: '3', label: '意向 【必須】✅✅✅', content: '・面談内容：\n保険内容について提案を行いました。\n現状の保障内容とライフプランをもとに、将来的なリスクへの備えをどのように最適化するかを検討しました。\n公的保険制度をお伝えし、しっかり理解されてこれらの保険を選びました。\n基本的に推奨商品の中から意向に合う商品を選定することを許可済み。\nお客さまの意向' },
+                { id: '4', label: '運用＋死亡', content: '【資産形成】\n・死亡保障をつけながら将来の資産形成\n・長期的な資産形成をしたい\n・死亡保障を確保しつつ、運用の可能性も求めたい\n【死亡保障】\n・葬儀費用を確保したい\n・万が一の時、家族に死亡保険金を残したい' },
+                { id: '5', label: '死亡', content: '【死亡保障】\n・葬儀費用を確保したい\n・万が一の時、家族に死亡保険金を残したい' },
+                { id: '6', label: '医療保障', content: '【医療保障】\n・万が一の治療費・入院・手術に備えたい\n・疾病時の自己負担を減らし、貯蓄を守りたい' },
+                { id: '7', label: '【変額保険】', content: 'アクサ生命　ユニットリンク　死亡保障が一定額確保される　会社も大きく有名\nアクサ生命　ユニットリンク介護　死亡保障が一定額確保される　介護がつく　会社も大きく有名\n東京海上あんしん生命マーケットリンク　払い込み免除が広い　日本の会社で有名' },
+                { id: '8', label: '【医療保障】', content: '【医療保障】\nメディケア生命　メディフィットA　保障が他社と比べて保障もよく価格がいい\nFWD生命　保障が他社と比べて保障もよく価格がいい' },
+                { id: '9', label: '【がん保険】', content: '【がん保険】\nひまわり生命　がん保険　免責期間に保険料払わなくていい・保障範囲が広い・非喫煙割引がある\nアフラック　がん保険　付帯サービスが強い' },
+                { id: '10', label: '【特定疾病保険】', content: 'メディケア生命　プラス　保険料が他社と比べて安いことが多い\nはなさく生命　一時金　保険料が他社と比べて安いことが多い' },
+                { id: '11', label: '【収入保障】', content: '【収入保障】\nひまわり生命収入保障　払い込み免除の要件が広い\nFWD収入保障　他社と比べて安い可能性があるため' },
+                { id: '12', label: '【一時払い保障】', content: '【一時払い保障】\nメットライフ生命ビーウイズユープラス２　死亡保障が大きく取れるため\n第一フロンティア生命　プレミアプレゼント' },
+                { id: '13', label: '最終意向【必須】✅✅✅', content: '結果、最終意向が選定した商品と一致していました。\n適合性の原則にてしっかりヒアリング\n保険は長期的な保険商品なので、長期的に保有できる範囲でご契約することの説明をしました。' },
+                { id: '14', label: 'オンライン　✅✅', content: 'ビデオ会議システム（Teams）にて面談実施。\nＰＣ画面を通じて意向確認・把握、および比較推奨の実施、その他関連資料の提示を行い、意向把握シート等に記載のとおり確認を実施。' }
+            ],
+            商談レポート: [
+                { id: '15', label: 'メール敬語プロンプト', content: '上記の文章を、丁寧でやわらかい印象のビジネスメールに変換してください。\n相手に敬意を示しつつ、堅すぎず自然な文体にしてください。\n「存じます」「恐縮ではございますが」などの硬い表現は避けてください。\n文章はビジネスシーンで自然に使える長さでまとめてください。\n件名宛名はいりません。本文のみ表示してください' },
+                { id: '16', label: '初回　同席者あり✅', content: '・同席者：配偶者\n・面談内容（意向の詳細等）：ヒアリング中\n・個別プラン提案（保険会社名と商品名）：未提案\n・意向の追加・変更：ヒアリング中' },
+                { id: '17', label: '初回　同席者なし✅', content: '・同席者：なし\n・面談内容（意向の詳細等）：ヒアリング中\n・個別プラン提案（保険会社名と商品名）：未提案\n・意向の追加・変更：ヒアリング中' },
+                { id: '18', label: 'OI 初回訪問', content: '本日は初回面談にてご挨拶をさせていただきました。\nはじめに、弊社のご紹介をさせていただき、どのような会社であるかについて詳しくご説明いたしました。\nその中で、ファイナンシャルプランナー（FP）相談ではどのようなことが可能かを、パンフレット等を用いてご案内いたしました。' },
+                { id: '19', label: '貯蓄の基本', content: '貯蓄の話を聞きたいということで、貯蓄の短期・中期・長期の期間の分け方をお伝えしました。\n長期分野には保険や資産運用などでも資産形成できることをお伝えしました。\n保険や資産運用は短期的な貯蓄に向かないこと、場合によっては元本割れが発生してしまうこともしっかりお伝えしました。' },
+                { id: '20', label: '支出の減らし方', content: '固定費の見直しについてもお伝えいたしました。 固定費がうまく見直せた場合、支出を抑えることができ、その分を資産形成などに充てることが可能になるため、結果的に資産形成に回せる金額が増える、ということをご説明いたしました。\n具体的には2点、お伝えしております。\nまず1点目は「通信費」についてです。携帯電話のキャリアによって月々の費用に違いがあることをお伝えし、見直しによって固定費を抑える可能性についてご案内いたしました。' }
+            ]
+        };
+
+        let keiyakuSelectedTemplates = [];
+        let keiyakuCurrentPreview = null;
+
+        function initKeiyakuApp() {
+            keiyakuRenderTemplateList();
+        }
+
+        function keiyakuRenderTemplateList() {
+            const listEl = document.getElementById('keiyaku-templateList');
+            listEl.innerHTML = '';
+            
+            for (const [category, items] of Object.entries(keiyakuTemplates)) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'space-y-3';
+                
+                const categoryTitle = document.createElement('h3');
+                categoryTitle.className = 'font-medium text-indigo-600';
+                categoryTitle.textContent = category;
+                categoryDiv.appendChild(categoryTitle);
+                
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'space-y-2';
+                
+                items.forEach(template => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'flex items-center p-3 rounded-md cursor-pointer transition-all bg-gray-100 hover:bg-gray-200';
+                    itemDiv.onclick = () => keiyakuToggleTemplate(template);
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `keiyaku-check-${template.id}`;
+                    checkbox.className = 'w-4 h-4 text-indigo-600 border-gray-300 rounded';
+                    checkbox.checked = keiyakuSelectedTemplates.some(t => t.id === template.id);
+                    checkbox.onchange = (e) => {
+                        e.stopPropagation();
+                        keiyakuToggleTemplate(template);
+                    };
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `keiyaku-check-${template.id}`;
+                    label.className = 'ml-3 block text-sm font-medium cursor-pointer w-full';
+                    label.textContent = template.label;
+                    
+                    itemDiv.appendChild(checkbox);
+                    itemDiv.appendChild(label);
+                    itemsDiv.appendChild(itemDiv);
+                });
+                
+                categoryDiv.appendChild(itemsDiv);
+                listEl.appendChild(categoryDiv);
+            }
+        }
+
+        function keiyakuToggleTemplate(template) {
+            const index = keiyakuSelectedTemplates.findIndex(t => t.id === template.id);
+            if (index > -1) {
+                keiyakuSelectedTemplates.splice(index, 1);
+                if (keiyakuCurrentPreview && keiyakuCurrentPreview.id === template.id) {
+                    keiyakuCurrentPreview = keiyakuSelectedTemplates[0] || null;
+                }
+            } else {
+                keiyakuSelectedTemplates.push(template);
+                keiyakuCurrentPreview = template;
+            }
+            keiyakuRenderTemplateList();
+            keiyakuUpdateUI();
+            keiyakuShowPreview();
+        }
+
+        function keiyakuUpdateUI() {
+            const count = keiyakuSelectedTemplates.length;
+            const countEl = document.getElementById('keiyaku-selectedCount');
+            const copyAllBtn = document.getElementById('keiyaku-copyAllBtn');
+            const bottomCopyBtn = document.getElementById('keiyaku-bottomCopyBtn');
+            
+            if (count > 0) {
+                countEl.textContent = `${count}件選択中`;
+                countEl.style.display = 'block';
+                copyAllBtn.style.display = 'block';
+                bottomCopyBtn.style.display = 'block';
+            } else {
+                countEl.style.display = 'none';
+                copyAllBtn.style.display = 'none';
+                bottomCopyBtn.style.display = 'none';
+            }
+        }
+
+        function keiyakuShowPreview() {
+            const previewArea = document.getElementById('keiyaku-previewArea');
+            
+            if (!keiyakuCurrentPreview) {
+                previewArea.innerHTML = '<div class="h-64 flex items-center justify-center text-center"><p class="text-lg text-gray-500">左側からテンプレートを選択してください</p></div>';
+                return;
+            }
+            
+            // プレビューでもアスタリスクを除去して表示
+            previewArea.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">${keiyakuCurrentPreview.label}</h2>
+                    <button onclick="keiyakuCopyCurrent()" class="px-4 py-2 rounded-md text-white font-medium bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">表示中のものをコピー</button>
+                </div>
+                <div class="bg-gray-50 rounded-md p-4 whitespace-pre-wrap max-h-96 overflow-y-auto font-mono text-sm border border-gray-200">${removeAsterisks(keiyakuCurrentPreview.content)}</div>
+            `;
+        }
+
+        function keiyakuCopyCurrent() {
+            if (!keiyakuCurrentPreview) return;
+            copyToClipboard(keiyakuCurrentPreview.content);
+            alert('コピーしました！');
+        }
+
+        function keiyakuCopyAll() {
+            if (keiyakuSelectedTemplates.length === 0) return;
+            const combined = keiyakuSelectedTemplates.map(t => `【${t.label}】\n${t.content}`).join('\n\n');
+            copyToClipboard(combined);
+            alert('全てコピーしました！');
+        }
+
+        function keiyakuClearAll() {
+            keiyakuSelectedTemplates = [];
+            keiyakuCurrentPreview = null;
+            keiyakuRenderTemplateList();
+            keiyakuUpdateUI();
+            keiyakuShowPreview();
+        }
+    </script>
+</body>
+</html>
